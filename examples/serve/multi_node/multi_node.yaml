@@ -1,4 +1,4 @@
-# SkyServe YAML to launch a service where each replica contains multiple nodes.
+# SkyServe YAML to launch a service where each replica contains multiple gang-scheduled nodes.
 # Preemption of one node will cause the replica to be preempted and new replica to be launched.
 
 envs:
