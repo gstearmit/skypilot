@@ -1,0 +1,16 @@
+# https://skypilot.readthedocs.io/en/latest/examples/spot-jobs.html#spot-jobs
+# sky spot dashboard
+
+spot:
+  # NOTE: these settings only take effect for a new spot controller, not if
+  # you have an existing one.
+  controller:
+    resources:
+      # All configs below are optional.
+      # Specify the location of the spot controller.
+      cloud: gcp
+      region: us-central1
+      # Specify the maximum number of spot jobs that can be run concurrently.
+      cpus: 4+  # number of vCPUs, max concurrent spot jobs = 2 * cpus
+      # Specify the disk_size in GB of the spot controller.
+      disk_size: 100

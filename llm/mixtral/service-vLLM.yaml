@@ -1,0 +1,41 @@
+# sky launch -c mixtral-87b service-vLLM.yaml --region us-central1
+# Run `sky serve up service-vLLM.yaml` # to deploy the service with automatic price and capacity optimization.
+# Once it is deployed, use `sky serve status` to check the status of the service:
+
+# sky exec mixtral-87b service-vLLM.yaml
+#I 04-02 10:02:24 cloud_vm_ray_backend.py:3310] Cluster name: mixtral-87b
+#I 04-02 10:02:24 cloud_vm_ray_backend.py:3310] To log into the head VM: ssh mixtral-87b
+#I 04-02 10:02:24 cloud_vm_ray_backend.py:3310] To submit a job:         sky exec mixtral-87b yaml_file
+#I 04-02 10:02:24 cloud_vm_ray_backend.py:3310] To stop the cluster:     sky stop mixtral-87b
+#I 04-02 10:02:24 cloud_vm_ray_backend.py:3310] To teardown the cluster: sky down mixtral-87b
+
+#IP=$(sky status --ip mixtral-87b)
+#curl -L http://$IP:8080/v1/completions \
+#  -H "Content-Type: application/json" \
+#  -d '{
+#      "model": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+#      "prompt": "My favourite condiment is",
+#      "max_tokens": 25
+#  }'
+
+# service.yaml
+service:
+  readiness_probe: /v1/models
+  replicas: 2
+
+# Fields below describe each replica.
+resources:
+  ports: 8080
+  accelerators: A100:2 # {L4:8, A10g:8, A100:4, A100:8, A100-80GB:2, A100-80GB:4, A100-80GB:8}
+
+setup: |
+  conda create -n vllm python=3.9 -y
+  conda activate vllm
+  pip install vllm
+
+run: |
+  conda activate vllm
+  python -m vllm.entrypoints.openai.api_server \
+    --tensor-parallel-size 2 \
+    --host 0.0.0.0 --port 8080 \
+    --model mistralai/Mixtral-8x7B-Instruct-v0.1

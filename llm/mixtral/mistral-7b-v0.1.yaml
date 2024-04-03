@@ -1,0 +1,13 @@
+# sky launch -c mistral-7b mistral-7b-v0.1.yaml --region us-east1
+#
+resources:
+  cloud: gcp
+  accelerators: V100:2
+  ports:
+    - 8000
+
+run: |
+  docker run --gpus all -p 8000:8000 ghcr.io/mistralai/mistral-src/vllm:latest \
+                   --host 0.0.0.0 \
+                   --model mistralai/Mixtral-8x7B-Instruct-v0.1 \
+                   --tensor-parallel-size 2
