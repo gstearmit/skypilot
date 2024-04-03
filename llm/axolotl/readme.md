@@ -1,5 +1,3 @@
-# Axolotl
-
 This example is using the same config located https://github.com/OpenAccess-AI-Collective/axolotl/tree/main/examples/mistral
 
 

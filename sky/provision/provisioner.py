@@ -12,7 +12,6 @@ from typing import Dict, List, Optional, Tuple
 
 import colorama
 
-import sky
 from sky import clouds
 from sky import provision
 from sky import sky_logging
@@ -166,8 +165,6 @@ def bulk_provision(
 
     with provision_logging.setup_provision_logging(log_dir):
         try:
-            logger.debug(f'SkyPilot version: {sky.__version__}; '
-                         f'commit: {sky.__commit__}')
             logger.debug(_TITLE.format('Provisioning'))
             logger.debug(
                 'Provision config:\n'
@@ -261,8 +258,6 @@ def _ssh_probe_command(ip: str,
         '-o',
         'StrictHostKeyChecking=no',
         '-o',
-        'PasswordAuthentication=no',
-        '-o',
         'ConnectTimeout=10s',
         '-o',
         f'UserKnownHostsFile={os.devnull}',
@@ -351,23 +346,18 @@ def _wait_ssh_connection_indirect(ip: str,
     del ssh_control_name, kwargs  # unused
     command = _ssh_probe_command(ip, ssh_port, ssh_user, ssh_private_key,
                                  ssh_proxy_command)
-    message = f'Waiting for SSH using command: {_shlex_join(command)}'
-    logger.debug(message)
-    try:
-        proc = subprocess.run(command,
-                              shell=False,
-                              check=False,
-                              timeout=10,
-                              stdout=subprocess.DEVNULL,
-                              stderr=subprocess.PIPE)
-        if proc.returncode != 0:
-            stderr = proc.stderr.decode('utf-8')
-            stderr = f'Error: {stderr}'
-            logger.debug(f'{message}{stderr}')
-            return False, stderr
-    except subprocess.TimeoutExpired as e:
-        stderr = f'Error: {str(e)}'
-        logger.debug(f'{message}Error: {e}')
+    logger.debug(f'Waiting for SSH using command: {_shlex_join(command)}')
+    proc = subprocess.run(command,
+                          shell=False,
+                          check=False,
+                          stdout=subprocess.DEVNULL,
+                          stderr=subprocess.PIPE)
+    if proc.returncode != 0:
+        stderr = proc.stderr.decode('utf-8')
+        stderr = f'Error: {stderr}'
+        logger.debug(
+            f'Waiting for SSH to {ip} with command: {_shlex_join(command)}\n'
+            f'{stderr}')
         return False, stderr
     return True, ''
 
@@ -465,7 +455,7 @@ def _post_provision_setup(
         docker_config = config_from_yaml.get('docker', {})
         if docker_config:
             status.update(
-                '[bold cyan]Launching - Initializing docker container[/]')
+                '[bold cyan]Lauching - Initializing docker container[/]')
             docker_user = instance_setup.initialize_docker(
                 cluster_name.name_on_cloud,
                 docker_config=docker_config,

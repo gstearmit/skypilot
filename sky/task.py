@@ -13,7 +13,9 @@ import yaml
 import sky
 from sky import clouds
 from sky import exceptions
+from sky import global_user_state
 from sky import sky_logging
+from sky.backends import backend_utils
 import sky.dag
 from sky.data import data_utils
 from sky.data import storage as storage_lib
@@ -253,14 +255,13 @@ class Task:
         self.event_callback = event_callback
         # Ignore type error due to a mypy bug.
         # https://github.com/python/mypy/issues/3004
-        self._num_nodes = 1
         self.num_nodes = num_nodes  # type: ignore
 
         self.inputs: Optional[str] = None
         self.outputs: Optional[str] = None
         self.estimated_inputs_size_gigabytes: Optional[float] = None
         self.estimated_outputs_size_gigabytes: Optional[float] = None
-        # Default to CPU VM
+        # Default to CPUNode
         self.resources: Union[List[sky.Resources],
                               Set[sky.Resources]] = {sky.Resources()}
         self._service: Optional[service_spec.SkyServiceSpec] = None
@@ -855,17 +856,15 @@ class Task:
         task_storage_mounts.update(storage_mounts)
         return self.set_storage_mounts(task_storage_mounts)
 
-    def _get_preferred_store(
-            self) -> Tuple[storage_lib.StoreType, Optional[str]]:
-        """Returns the preferred store type and region for this task."""
+    def get_preferred_store_type(self) -> storage_lib.StoreType:
         # TODO(zhwu, romilb): The optimizer should look at the source and
         #  destination to figure out the right stores to use. For now, we
         #  use a heuristic solution to find the store type by the following
         #  order:
-        #  1. cloud/region decided in best_resources.
-        #  2. cloud/region specified in the task resources.
+        #  1. cloud decided in best_resources.
+        #  2. cloud specified in the task resources.
         #  3. if not specified or the task's cloud does not support storage,
-        #     use the first enabled storage cloud with default region.
+        #     use the first enabled storage cloud.
         # This should be refactored and moved to the optimizer.
 
         # This check is not needed to support multiple accelerators;
@@ -873,17 +872,16 @@ class Task:
         # assert len(self.resources) == 1, self.resources
         storage_cloud = None
 
-        enabled_storage_clouds = (
-            storage_lib.get_cached_enabled_storage_clouds_or_refresh(
-                raise_if_no_cloud_access=True))
+        backend_utils.check_public_cloud_enabled()
+        enabled_storage_clouds = global_user_state.get_enabled_storage_clouds()
+        if not enabled_storage_clouds:
+            raise ValueError('No enabled cloud for storage, run: sky check')
 
         if self.best_resources is not None:
             storage_cloud = self.best_resources.cloud
-            storage_region = self.best_resources.region
         else:
             resources = list(self.resources)[0]
             storage_cloud = resources.cloud
-            storage_region = resources.region
         if storage_cloud is not None:
             if str(storage_cloud) not in enabled_storage_clouds:
                 storage_cloud = None
@@ -892,10 +890,9 @@ class Task:
             storage_cloud = clouds.CLOUD_REGISTRY.from_str(
                 enabled_storage_clouds[0])
             assert storage_cloud is not None, enabled_storage_clouds[0]
-            storage_region = None  # Use default region in the Store class
 
         store_type = storage_lib.get_storetype_from_cloud(storage_cloud)
-        return store_type, storage_region
+        return store_type
 
     def sync_storage_mounts(self) -> None:
         """(INTERNAL) Eagerly syncs storage mounts to cloud storage.
@@ -906,9 +903,9 @@ class Task:
         """
         for storage in self.storage_mounts.values():
             if len(storage.stores) == 0:
-                store_type, store_region = self._get_preferred_store()
+                store_type = self.get_preferred_store_type()
                 self.storage_plans[storage] = store_type
-                storage.add_store(store_type, store_region)
+                storage.add_store(store_type)
             else:
                 # We will download the first store that is added to remote.
                 self.storage_plans[storage] = list(storage.stores.keys())[0]
@@ -1065,30 +1062,6 @@ class Task:
                 for mount_path, storage in self.storage_mounts.items()
             })
         return config
-
-    def get_required_cloud_features(
-            self) -> Set[clouds.CloudImplementationFeatures]:
-        """Returns the required features for this task (but not for resources).
-
-        Features required by the resources are checked separately in
-        cloud.get_feasible_launchable_resources().
-
-        INTERNAL: this method is internal-facing.
-        """
-        required_features = set()
-
-        # Multi-node
-        if self.num_nodes > 1:
-            required_features.add(clouds.CloudImplementationFeatures.MULTI_NODE)
-
-        # Storage mounting
-        for _, storage_mount in self.storage_mounts.items():
-            if storage_mount.mode == storage_lib.StorageMode.MOUNT:
-                required_features.add(
-                    clouds.CloudImplementationFeatures.STORAGE_MOUNTING)
-                break
-
-        return required_features
 
     def __rshift__(self, b):
         sky.dag.get_current_dag().add_edge(self, b)

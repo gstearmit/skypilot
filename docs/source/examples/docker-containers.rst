@@ -162,43 +162,22 @@ Private Registries
 When using this mode, to access Docker images hosted on private registries,
 you can provide the registry authentication details using :ref:`task environment variables <env-vars>`:
 
-.. tab-set::
+.. code-block:: yaml
 
-    .. tab-item:: Docker Hub
-        :sync: docker-hub-tab
+  # ecr_private_docker.yaml
+  resources:
+    image_id: docker:<your-user-id>.dkr.ecr.us-east-1.amazonaws.com/<your-private-image>:<tag>
+    # the following shorthand is also supported:
+    # image_id: docker:<your-private-image>:<tag>
 
-        .. code-block:: yaml
-
-          resources:
-            image_id: docker:<user>/<your-docker-hub-repo>:<tag>
-
-          envs:
-            # Values used in: docker login -u <user> -p <password> <registry server>
-            SKYPILOT_DOCKER_USERNAME: <user>
-            SKYPILOT_DOCKER_PASSWORD: <password>
-            SKYPILOT_DOCKER_SERVER: docker.io
-
-    .. tab-item:: Cloud Provider Registry (e.g., ECR)
-        :sync: csp-registry-tab
-
-        .. code-block:: yaml
-
-          resources:
-            image_id: docker:<your-ecr-repo>:<tag>
-
-          envs:
-            # Values used in: docker login -u <user> -p <password> <registry server>
-            SKYPILOT_DOCKER_USERNAME: AWS
-            SKYPILOT_DOCKER_PASSWORD: <password>
-            SKYPILOT_DOCKER_SERVER: <your-user-id>.dkr.ecr.<region>.amazonaws.com
+  envs:
+    SKYPILOT_DOCKER_USERNAME: AWS
+    # SKYPILOT_DOCKER_PASSWORD: <password>
+    SKYPILOT_DOCKER_SERVER: <your-user-id>.dkr.ecr.us-east-1.amazonaws.com
 
 We suggest setting the :code:`SKYPILOT_DOCKER_PASSWORD` environment variable through the CLI (see :ref:`passing secrets <passing-secrets>`):
 
 .. code-block:: console
 
-  $ # Docker Hub password:
-  $ export SKYPILOT_DOCKER_PASSWORD=...
-  $ # Or cloud registry password:
   $ export SKYPILOT_DOCKER_PASSWORD=$(aws ecr get-login-password --region us-east-1)
-  $ # Pass --env:
-  $ sky launch task.yaml --env SKYPILOT_DOCKER_PASSWORD
+  $ sky launch ecr_private_docker.yaml --env SKYPILOT_DOCKER_PASSWORD

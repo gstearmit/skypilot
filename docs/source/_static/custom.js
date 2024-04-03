@@ -26,8 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // New items:
     const newItems = [
         { selector: '.caption-text', text: 'SkyServe: Model Serving' },
-        { selector: '.toctree-l1 > a', text: 'Running on Kubernetes' },
-        { selector: '.toctree-l1 > a', text: 'DBRX (Databricks)' },
+        { selector: '.toctree-l1 > a', text: 'Running on Kubernetes' }
     ];
     newItems.forEach(({ selector, text }) => {
         document.querySelectorAll(selector).forEach((el) => {
@@ -36,13 +35,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-});
-
-// Remove Previous button from every first page of each tab.
-document.addEventListener("DOMContentLoaded", function () {
-    if (window.location.pathname.endsWith('/') || window.location.pathname.endsWith('index.html')) {
-        var style = document.createElement('style');
-        style.innerHTML = '.prev-next-area a.left-prev { display: none; }';
-        document.head.appendChild(style);
-    }
 });

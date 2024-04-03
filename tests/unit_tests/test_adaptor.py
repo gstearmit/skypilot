@@ -27,8 +27,8 @@ def test_aws_adaptor_resources_memory_leakage():
                                                            timeout=1)[0]
             delta = mem_usage_after - memory_usage_before
             print('memory usage:', delta)
-            # 125MB is chosen by only creating 4 EC2 resources, and the memory
+            # 120MB is chosen by only creating 4 EC2 resources, and the memory
             # usage should not grow when creating more.
-            assert delta <= 125, (
+            assert delta <= 120, (
                 f'Function used {delta:.2f}MB which is more than the '
-                'allowed 125MB')
+                'allowed 120MB')

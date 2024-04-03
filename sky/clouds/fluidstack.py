@@ -50,6 +50,9 @@ class Fluidstack(clouds.Cloud):
         clouds.CloudImplementationFeatures.CUSTOM_DISK_TIER:
             'Custom disk tiers'
             f' is not supported in {_REPR}.',
+        clouds.CloudImplementationFeatures.OPEN_PORTS:
+            'Opening ports'
+            f'is not supported in {_REPR}.',
     }
     # Using the latest SkyPilot provisioner API to provision and check status.
     PROVISIONER_VERSION = clouds.ProvisionerVersion.SKYPILOT
@@ -301,7 +304,7 @@ class Fluidstack(clouds.Cloud):
     @classmethod
     def default_username(cls, region: str) -> str:
         return {
-            'norway_2_eu': 'ubuntu',
+            'norway_2_eu': 'fsuser',
             'calgary_1_canada': 'ubuntu',
             'norway_3_eu': 'ubuntu',
             'norway_4_eu': 'ubuntu',

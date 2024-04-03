@@ -92,9 +92,6 @@ _ACC_INSTANCE_TYPE_DICTS = {
         4: ['g2-standard-48'],
         8: ['g2-standard-96'],
     },
-    'H100': {
-        8: ['a3-highgpu-8g'],
-    }
 }
 
 # Number of CPU cores per GPU based on the AWS setting.

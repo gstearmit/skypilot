@@ -1,8 +1,13 @@
-# A example yaml for serving Mixtral model from Mistral AI with an OpenAI API.
+# A example yaml for serving Mixtral model from Mistral.ai with an OpenAI API.
 # Usage:
-#  1. Launch on a single instance: `sky launch -c mixtral ./serve.yaml`
+# 0 . https://cloud.google.com/about/:  asia-southeast2 us-east-1 europe-west4-a  asia-southeast2
+#  1. Launch on a single instance: `sky launch -c mixtral ./serve.yaml --region asia-southeast2`
 #  2. Scale up to multiple instances with a single endpoint:
 #     `sky serve up -n mixtral ./serve.yaml`
+
+#Hint: sky show-gpus to list available accelerators.
+#      sky check to check the enabled clouds.
+
 service:
   readiness_probe:
     path: /v1/chat/completions
@@ -16,8 +21,9 @@ service:
   replica_policy:
     min_replicas: 2
 
+# 1x NVIDIA V100 GPU
 resources: 
-  accelerators: {L4:8, A10g:8, A10:8, A100:4, A100:8, A100-80GB:2, A100-80GB:4, A100-80GB:8}
+  accelerators: A100:1  ## {L4:8, A10g:8, A10:8, A100:4, A100:8, A100-80GB:2, A100-80GB:4, A100-80GB:8}
   ports: 8000
   disk_tier: best
 

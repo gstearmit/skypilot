@@ -123,6 +123,3 @@ class SSHCommandRunner:
               log_path: str = ...,
               stream_logs: bool = ...) -> None:
         ...
-
-    def check_connection(self) -> bool:
-        ...

@@ -27,7 +27,7 @@ if typing.TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_tenancy_prefix: Optional[str] = None
+_tenancy_prefix = None
 
 
 @clouds.CLOUD_REGISTRY.register

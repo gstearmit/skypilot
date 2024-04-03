@@ -78,10 +78,6 @@ Sky Serve CLI
    :prog: sky serve logs
    :nested: full
 
-.. click:: sky.cli:serve_update
-   :prog: sky serve update
-   :nested: full
-
 Managed Spot Jobs CLI
 ---------------------------
 
